@@ -1,0 +1,185 @@
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>竞价选股系统 - 集合竞价展示</title>
+  <meta name="description" content="竞价选股系统展示页，登录后按策略加载股票池，查看集合竞价结果、分页筛选与导出。">
+  <meta name="keywords" content="竞价选股系统,集合竞价,选股策略,股票池,竞价结果">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#d9480f">
+  <link rel="icon" href="/web/1.ico">
+  <link rel="stylesheet" href="./styles.css">
+<style type="text/css">.qa-sdk-wrapper {
+  position: fixed;
+  width: 400px;
+  right: -600px;
+  max-height: 530px;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s ease-in-out;
+  background: #fff;
+}
+
+.qa-sdk-close-btn {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.qa-sdk-close-btn:hover {
+  border-radius: 50%;
+  background-color: #d5d9df;
+}
+
+#qa-sdk-iframe {
+  width: 400px;
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .qa-sdk-wrapper{
+    width: 356px;
+  }
+  #qa-sdk-iframe {
+    width: 356px;
+  }
+}
+</style><style id="ai-assist-webType-style">
+    .ai-assist-highlight {
+      background: yellow;
+    }
+    @media print {
+      #ai-assist-root-bangs,
+      #ai-assist-root-bilibili,
+      #ai-assist-root-new {
+        display: none !important;
+      }
+    }
+  </style></head>
+<body>
+  <a class="skip-link" href="#mainContent">跳转到主要内容</a>
+  <main id="mainContent" class="page" tabindex="-1">
+    <header class="topbar">
+      <div class="title-wrap">
+        <div class="product-brand" aria-label="产品标识">
+          <span class="product-brand-logo">
+            <img src="/web/1.ico" alt="竞价选股系统 Logo">
+          </span>
+          <span class="product-brand-name">竞价选股系统</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="account-meta" aria-live="polite">
+          <span class="account-expiry" id="userExpiryText" hidden=""></span>
+          <span class="pill" id="userPill">未登录</span>
+        </div>
+        <button type="button" class="btn-secondary" id="refreshBtn">刷新</button>
+        <button type="button" class="btn-secondary" id="logoutBtn">退出登录</button>
+      </div>
+    </header>
+
+    <section class="strategy-bar" aria-label="策略区域">
+      <div class="strategy-workspace">
+        <div class="strategy-tabs" role="tablist" aria-label="策略分类">
+          <button type="button" class="strategy-tab is-active" data-strategy-tab="internal" aria-selected="true">内部策略</button>
+          <button type="button" class="strategy-tab" data-strategy-tab="user" aria-selected="false">用户策略</button>
+          <button type="button" class="strategy-tab" data-strategy-tab="favorite" aria-selected="false">我的收藏</button>
+          <button type="button" class="strategy-tab" data-strategy-tab="temporary" aria-selected="false">临时策略</button>
+          <button type="button" class="strategy-tab" data-strategy-tab="code" aria-selected="false">代码</button>
+        </div>
+
+        <div class="strategy-panel" data-tab-panel="internal">
+          <div class="cards" id="strategyCards">
+            <div class="empty-card">正在加载策略...</div>
+          </div>
+        </div>
+
+        <div class="strategy-panel hidden" data-tab-panel="user">
+          <div class="panel-placeholder">用户策略界面暂未开放，后续再补功能。</div>
+        </div>
+
+        <div class="strategy-panel hidden" data-tab-panel="favorite">
+          <div class="panel-placeholder">我的收藏界面暂未开放，后续再补功能。</div>
+        </div>
+
+        <div class="strategy-panel hidden" data-tab-panel="temporary">
+          <form class="strategy-inline-form" id="temporaryStrategyForm">
+            <label class="inline-form-label" for="temporaryStrategyInput">策略</label>
+            <input id="temporaryStrategyInput" type="text" placeholder="请输入策略，如：竞价涨幅大于 3 且主板非 ST" autocomplete="off">
+            <button type="submit" class="btn-primary" id="temporaryStrategySubmitBtn">执行策略</button>
+          </form>
+          <div class="form-hint">输入临时策略后，直接将结果映射到下方竞价结果区。</div>
+        </div>
+
+        <div class="strategy-panel hidden" data-tab-panel="code">
+          <form class="strategy-inline-form" id="codeQueryForm">
+            <label class="inline-form-label" for="codeQueryInput">代码</label>
+            <input id="codeQueryInput" type="text" placeholder="请输入 6 位股票代码，支持多个代码用逗号或空格分隔" autocomplete="off">
+            <button type="submit" class="btn-primary" id="codeQuerySubmitBtn">查询代码</button>
+          </form>
+          <div class="form-hint">输入股票代码后，直接显示竞价计算结果。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-header-main">
+          <h2>竞价结果</h2>
+        </div>
+        <div class="panel-actions pagination-panel">
+          <span class="progress-pill" id="paginationInfo">暂无数据</span>
+          <button type="button" class="btn-secondary" id="prevPageBtn">上一页</button>
+          <button type="button" class="btn-secondary" id="nextPageBtn">下一页</button>
+        </div>
+      </div>
+      <div class="panel-desc" id="detailMeta">请选择一个策略。</div>
+      <div class="table-wrap">
+        <table aria-describedby="detailMeta">
+          <caption>集合竞价结果列表，支持排序与分页浏览。</caption>
+          <colgroup>
+            <col class="col-code">
+            <col class="col-name">
+            <col class="col-theme">
+            <col class="col-rise">
+            <col class="col-dynamic">
+            <col class="col-dynamic">
+            <col class="col-momentum">
+            <col class="col-buy">
+            <col class="col-net">
+            <col class="col-main-net">
+            <col class="col-float">
+            <col class="col-rank">
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" class="sticky-col sticky-code sortable-th" data-sort-key="code">代码</th>
+              <th scope="col" class="sticky-col sticky-name sortable-th" data-sort-key="name">名称</th>
+              <th scope="col" class="sortable-th" data-sort-key="theme">题材</th>
+              <th scope="col" class="th-accent-rise sortable-th" data-sort-key="auction_change_pct">竞涨幅</th>
+              <th scope="col" class="th-accent-blue sortable-th" data-sort-key="dynamic_ratio">动比</th>
+              <th scope="col" class="th-accent-blue sortable-th" data-sort-key="energy_ratio">能比</th>
+              <th scope="col" class="th-accent-blue sortable-th" data-sort-key="momentum">动能</th>
+              <th scope="col" class="th-accent-red sortable-th" data-sort-key="buy_amount">买额</th>
+              <th scope="col" class="th-accent-red sortable-th" data-sort-key="net_amount">净额</th>
+              <th scope="col" class="th-accent-red sortable-th" data-sort-key="main_force_net_amount">主净额</th>
+              <th scope="col" class="sortable-th" data-sort-key="actual_float">流通值</th>
+              <th scope="col" class="sortable-th" data-sort-key="query_rank">顺位</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footnote">提示：点击表头可切换排序，红线代表净额偏强，绿线代表净额偏弱，带视觉信号的行会额外高亮。</div>
+    </section>
+
+    <div class="status" id="statusBar" role="status" aria-live="polite">正在校验登录状态...</div>
+  </main>
+  <script src="/web/common.js"></script>
+  <script src="./app.js?v=20260430a"></script>
+
+
+<!----><div id="el-popper-container-8713"><!--v-if--><!--v-if--><!--v-if--><!--v-if--></div><!--v-if--><!--v-if--><div class="el-overlay" style="z-index: 2147483647; display: none;"><div role="dialog" aria-modal="true" aria-labelledby="el-id-8713-119" aria-describedby="el-id-8713-120" class="el-overlay-dialog" style="display: flex;"></div></div><div class="el-overlay" style="z-index: 2147483647; display: none;"><div role="dialog" aria-modal="true" aria-labelledby="el-id-8713-121" aria-describedby="el-id-8713-122" class="el-overlay-dialog" style="display: flex;"></div></div><div class="el-overlay" style="z-index: 2147483647; display: none;"><div role="dialog" aria-modal="true" aria-labelledby="el-id-8713-123" aria-describedby="el-id-8713-124" class="el-overlay-dialog" style="display: flex;"></div></div></body><div id="ai-assist-root-bangs"></div><div data-smooth-play-app="smooth-play-app"></div><div style="all: initial;"><div id="__fyzs__" class="notranslate" style="all: initial;"></div></div><div id="ai-assist-root-new"></div></html>
